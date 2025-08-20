@@ -1,0 +1,64 @@
+PREFIX fx: <http://sparql.xyz/facade-x/ns/>
+PREFIX xyz: <http://sparql.xyz/facade-x/data/>
+PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+PREFIX osgeo: <http://data.ordnancesurvey.co.uk/ontology/geometry/>
+PREFIX places: <https://pleiades.stoa.org/places/>
+PREFIX pleiades: <https://pleiades.stoa.org/places/vocab#>
+PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+CONSTRUCT
+{
+  ?place
+    a pleiades:Place ;
+    pleiades:hasFeatureType ?place_type ;
+    pleiades:hasLocation ?location ;
+    dcterms:title ?title ;
+    dcterms:description ?description ;
+    .
+
+  ?place_type
+    a skos:Concept ;
+    skos:prefLabel ?typeLabel ;
+    .
+
+  ?location
+    a pleiades:Location ;
+    osgeo:asGeoJSON ?geojson ;
+    .
+}
+WHERE
+{
+  SERVICE <x-sparql-anything:location=data/pleiades-places-latest.json>
+  {
+    fx:properties fx:json.literalize "geometry" .
+
+    ?place_node
+      xyz:uri ?place_uri_as_str ;
+      xyz:title ?title ;
+      xyz:description ?description ;
+      xyz:placeTypeURIs ?place_type_uris ;
+      xyz:locations ?locations ;
+      .
+
+    ?place_type_uris fx:anySlot ?place_type_uri_as_str .
+    ?locations fx:anySlot ?location_node .
+
+    ?location_node xyz:uri ?location_uri_as_str ;
+      xyz:geometry ?geojson ;
+      .
+
+    BIND(IRI(?place_uri_as_str) AS ?place)
+    BIND(IRI(?place_type_uri_as_str) as ?place_type)
+    BIND(IRI(?location_uri_as_str) as ?location)
+  }
+  # SERVICE <x-sparql-anything:location=data/pleiades-places.csv> {
+  #   fx:properties fx:csv.headers "true" .
+
+  #   ?row xyz:ID ?id .
+
+  #   BIND(fx:entity(places:, ?id) AS ?place)
+
+  # }
+}

@@ -1,3 +1,6 @@
-/pleiades-places.csv
 .DS_Store
+/pleiades-places.ttl
 /data/pleiades-places-latest.json
+/data/pleiades-places.csv
+/tools/sparql-anything/*
+!/tools/sparql-anything/Makefile
