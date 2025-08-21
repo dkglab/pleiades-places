@@ -1,7 +1,7 @@
 PREFIX fx: <http://sparql.xyz/facade-x/ns/>
 PREFIX xyz: <http://sparql.xyz/facade-x/data/>
 PREFIX dcterms: <http://purl.org/dc/terms/>
-PREFIX geo: <http://www.w3.org/2003/01/geo/wgs84_pos#>
+PREFIX geo: <http://www.opengis.net/ont/geosparql#>
 PREFIX osgeo: <http://data.ordnancesurvey.co.uk/ontology/geometry/>
 PREFIX places: <https://pleiades.stoa.org/places/>
 PREFIX pleiades: <https://pleiades.stoa.org/places/vocab#>
@@ -13,19 +13,21 @@ CONSTRUCT
   ?place
     a pleiades:Place ;
     pleiades:hasFeatureType ?place_type ;
+    pleiades:hasRepresentativePoint ?repr_point_geojson ;
     pleiades:hasLocation ?location ;
-    dcterms:title ?title ;
-    dcterms:description ?description ;
+    dcterms:title ?place_title ;
+    dcterms:description ?place_description ;
     .
 
   ?place_type
     a skos:Concept ;
-    skos:prefLabel ?typeLabel ;
+    # skos:prefLabel ?place_type_label ;
     .
 
   ?location
     a pleiades:Location ;
-    osgeo:asGeoJSON ?geojson ;
+    dcterms:title ?location_title ;
+    osgeo:asGeoJSON ?location_geojson ;
     .
 }
 WHERE
@@ -35,9 +37,10 @@ WHERE
     fx:properties fx:json.literalize "geometry" .
 
     ?place_node
+      xyz:id ?place_id ;
       xyz:uri ?place_uri_as_str ;
-      xyz:title ?title ;
-      xyz:description ?description ;
+      xyz:title ?place_title ;
+      xyz:description ?place_description ;
       xyz:placeTypeURIs ?place_type_uris ;
       xyz:locations ?locations ;
       .
@@ -45,20 +48,34 @@ WHERE
     ?place_type_uris fx:anySlot ?place_type_uri_as_str .
     ?locations fx:anySlot ?location_node .
 
-    ?location_node xyz:uri ?location_uri_as_str ;
-      xyz:geometry ?geojson ;
+    ?location_node
+      xyz:uri ?location_uri_as_str ;
+      xyz:title ?location_title ;
+      xyz:geometry ?geojson_as_str ;
       .
+    BIND(STRDT(?geojson_as_str, geo:geoJSONLiteral) AS ?location_geojson)
+
+    OPTIONAL
+    {
+      ?place_node xyz:reprPoint ?repr_point .
+      ?repr_point rdf:_1 ?repr_point_lng ; rdf:_2 ?repr_point_lat .
+      BIND(STRDT(CONCAT(
+        '{"type": "Point", "coordinates": [',
+        STR(?repr_point_lng),
+        ", ",
+        STR(?repr_point_lat),
+        "]}"), geo:geoJSONLiteral) AS ?repr_point_geojson)
+    }
 
     BIND(IRI(?place_uri_as_str) AS ?place)
     BIND(IRI(?place_type_uri_as_str) as ?place_type)
     BIND(IRI(?location_uri_as_str) as ?location)
   }
-  # SERVICE <x-sparql-anything:location=data/pleiades-places.csv> {
-  #   fx:properties fx:csv.headers "true" .
-
-  #   ?row xyz:ID ?id .
-
-  #   BIND(fx:entity(places:, ?id) AS ?place)
-
+  # SERVICE <x-sparql-anything:location=data/place-types.ttl>
+  # {
+  #   ?place_type
+  #     a skos:Concept ;
+  #     skos:prefLabel ?place_type_label ;
+  #     .
   # }
 }

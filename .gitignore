@@ -1,8 +1,11 @@
 .DS_Store
-/pleiades-places.ttl
+/pleiades-places-geojson.ttl
+/pleiades-places-wkt.ttl
 /data/pleiades-places-latest.json
-/data/pleiades-places.csv
+/data/place-types.ttl
 /tools/jena/*
 !/tools/jena/Makefile
+/tools/clean-geoms/*
+!/tools/clean-geoms/Makefile
 /tools/sparql-anything/*
 !/tools/sparql-anything/Makefile

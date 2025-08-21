@@ -1,5 +1,6 @@
-SPARQL-ANY := tools/sparql-anything/sparql-anything.jar
+SPARQL-ANY := ./tools/sparql-anything/sparql-anything.jar
 ARQ := ./tools/jena/bin/arq
+CLEAN-GEOMS := ./tools/clean-geoms/clean-geoms
 
 .PHONY: all clean superclean
 
@@ -17,15 +18,16 @@ define log
 	@echo "\\n$(call green,$(1))"
 endef
 
-all: pleiades-places.ttl
+all: pleiades-places-wkt.ttl
 
 clean:
-	rm -f pleiades-places.ttl
+	rm -f pleiades-places-*.ttl
 
 superclean: clean
-	rm -f data/pleiades-places.csv data/pleiades-places-latest.json*
+	rm -f data/pleiades-places-latest.json* data/place-types.ttl
 	$(MAKE) -s -C tools/sparql-anything clean
 	$(MAKE) -s -C tools/jena clean
+	$(MAKE) -s -C tools/clean-geoms clean
 
 $(ARQ):
 	@$(MAKE) -s -C tools/jena
@@ -33,25 +35,28 @@ $(ARQ):
 $(SPARQL-ANY):
 	$(MAKE) -s -C tools/sparql-anything
 
-data/pleiades-places.csv: data/awmc-pleiades-shapefiles/pleiades_places.shp
-	ogr2ogr \
-	-f CSV \
-	-lco GEOMETRY=AS_WKT \
-	$@ $<
+$(CLEAN-GEOMS):
+	$(MAKE) -s -C tools/clean-geoms
 
 data/pleiades-places-latest.json:
-	curl -O $(PLEIADES)/json/$@.gz
-	gunzip -f $@.gz
+	curl $(PLEIADES)/json/pleiades-places-latest.json.gz > data/pleiades-places-latest.json.gz
+	gunzip -f data/pleiades-places-latest.json.gz
 	touch $@
 
-pleiades-places.ttl: \
+data/place-types.ttl:
+	curl $(PLEIADES)/rdf/place-types.ttl > $@
+
+pleiades-places-geojson.ttl: \
 	queries/construct.rq queries/count.rq \
-	data/pleiades-places-latest.json \
+	data/pleiades-places-latest.json data/place-types.ttl \
 	| $(SPARQL-ANY) $(ARQ)
-	java -Xmx24g -jar $(SPARQL-ANY) -q $< > $@ 2> /dev/null
+	java -Xmx24g -jar $(SPARQL-ANY) -q $< > $@
 	$(call log,Counting resources in $@ using $(word 2,$^))
 	@echo $(ARQ) --data $@ --query $(word 2,$^)
 	@count=$$($(ARQ) --data $@ --query $(word 2,$^) --results csv | tail -n 1 | tr -d '\r\n') ; \
 	[ "$$count" -gt 0 ] && \
 	{ echo "$(call green,$$count resources constructed)" ; } || \
 	{ echo "$(call red,No resources found in $@!)" ; exit 1 ; }
+
+pleiades-places-wkt.ttl: pleiades-places-geojson.ttl | $(CLEAN-GEOMS)
+	./tools/clean-geoms/clean-geoms $< > $@
