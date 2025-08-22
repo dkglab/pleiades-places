@@ -1,5 +1,9 @@
+SHELL := /usr/bin/env bash
+.SHELLFLAGS := -O extglob -c
+
 SPARQL-ANY := ./tools/sparql-anything/sparql-anything.jar
 ARQ := ./tools/jena/bin/arq
+RIOT := ./tools/jena/bin/riot
 
 .PHONY: all clean superclean
 
@@ -17,7 +21,7 @@ define log
 	@echo "\\n$(call green,$(1))"
 endef
 
-all: pleiades-places.ttl
+all: pleiades-places.ttl pleiades-places.nt
 
 clean:
 	rm -f pleiades-places.ttl
@@ -27,7 +31,7 @@ superclean: clean
 	$(MAKE) -s -C tools/sparql-anything clean
 	$(MAKE) -s -C tools/jena clean
 
-$(ARQ):
+$(ARQ) $(RIOT):
 	@$(MAKE) -s -C tools/jena
 
 $(SPARQL-ANY):
@@ -54,3 +58,7 @@ pleiades-places.ttl: \
 	[ "$$count" -gt 0 ] && \
 	{ echo "$(call green,$$count resources constructed)" ; } || \
 	{ echo "$(call red,No resources found in $@!)" ; exit 1 ; }
+
+pleiades-places.nt: pleiades-places.ttl
+	$(RIOT) --quiet --output=ntriples $< \
+	2> >(rg -v 'WARN  riot' 1>&2) > $@ || true

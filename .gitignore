@@ -1,5 +1,6 @@
 .DS_Store
 /pleiades-places.ttl
+/pleiades-places.nt
 /data/pleiades-places-latest.json
 /data/place-types.ttl
 /tools/jena/*
