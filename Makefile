@@ -1,6 +1,5 @@
 SPARQL-ANY := ./tools/sparql-anything/sparql-anything.jar
 ARQ := ./tools/jena/bin/arq
-CLEAN-GEOMS := ./tools/clean-geoms/clean-geoms
 
 .PHONY: all clean superclean
 
@@ -18,16 +17,15 @@ define log
 	@echo "\\n$(call green,$(1))"
 endef
 
-all: pleiades-places-wkt.ttl
+all: pleiades-places.ttl
 
 clean:
-	rm -f pleiades-places-*.ttl
+	rm -f pleiades-places.ttl
 
 superclean: clean
 	rm -f data/pleiades-places-latest.json* data/place-types.ttl
 	$(MAKE) -s -C tools/sparql-anything clean
 	$(MAKE) -s -C tools/jena clean
-	$(MAKE) -s -C tools/clean-geoms clean
 
 $(ARQ):
 	@$(MAKE) -s -C tools/jena
@@ -35,18 +33,17 @@ $(ARQ):
 $(SPARQL-ANY):
 	$(MAKE) -s -C tools/sparql-anything
 
-$(CLEAN-GEOMS):
-	$(MAKE) -s -C tools/clean-geoms
-
 data/pleiades-places-latest.json:
 	curl $(PLEIADES)/json/pleiades-places-latest.json.gz > data/pleiades-places-latest.json.gz
 	gunzip -f data/pleiades-places-latest.json.gz
 	touch $@
 
 data/place-types.ttl:
-	curl $(PLEIADES)/rdf/place-types.ttl > $@
+	curl $(PLEIADES)/rdf/place-types.ttl \
+	| sed 's|//pleiades.stoa.org/vocabularies/|//pleiades.stoa.org/vocabularies/place-types/|g' \
+	> $@
 
-pleiades-places-geojson.ttl: \
+pleiades-places.ttl: \
 	queries/construct.rq queries/count.rq \
 	data/pleiades-places-latest.json data/place-types.ttl \
 	| $(SPARQL-ANY) $(ARQ)
@@ -57,6 +54,3 @@ pleiades-places-geojson.ttl: \
 	[ "$$count" -gt 0 ] && \
 	{ echo "$(call green,$$count resources constructed)" ; } || \
 	{ echo "$(call red,No resources found in $@!)" ; exit 1 ; }
-
-pleiades-places-wkt.ttl: pleiades-places-geojson.ttl | $(CLEAN-GEOMS)
-	./tools/clean-geoms/clean-geoms $< > $@

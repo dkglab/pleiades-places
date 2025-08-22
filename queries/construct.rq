@@ -21,7 +21,7 @@ CONSTRUCT
 
   ?place_type
     a skos:Concept ;
-    # skos:prefLabel ?place_type_label ;
+    skos:prefLabel ?place_type_label ;
     .
 
   ?location
@@ -53,7 +53,7 @@ WHERE
       xyz:title ?location_title ;
       xyz:geometry ?geojson_as_str ;
       .
-    BIND(STRDT(?geojson_as_str, geo:geoJSONLiteral) AS ?location_geojson)
+    BIND(IF(?geojson_as_str != "null", STRDT(?geojson_as_str, geo:geoJSONLiteral), ?unbound) AS ?location_geojson)
 
     OPTIONAL
     {
@@ -71,11 +71,11 @@ WHERE
     BIND(IRI(?place_type_uri_as_str) as ?place_type)
     BIND(IRI(?location_uri_as_str) as ?location)
   }
-  # SERVICE <x-sparql-anything:location=data/place-types.ttl>
-  # {
-  #   ?place_type
-  #     a skos:Concept ;
-  #     skos:prefLabel ?place_type_label ;
-  #     .
-  # }
+  SERVICE <x-sparql-anything:location=data/place-types.ttl>
+  {
+    ?place_type
+      a skos:Concept ;
+      skos:prefLabel ?place_type_label ;
+      .
+  }
 }
