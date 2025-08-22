@@ -1,4 +1,0 @@
-[tool.pyright]
-venv = "venv"
-venvPath = "tools/clean-geoms"
-pythonVersion = "3.13"
