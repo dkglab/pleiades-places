@@ -1,86 +1,125 @@
 PREFIX fx: <http://sparql.xyz/facade-x/ns/>
 PREFIX xyz: <http://sparql.xyz/facade-x/data/>
-PREFIX dcterms: <http://purl.org/dc/terms/>
+PREFIX aat: <http://vocab.getty.edu/aat/>
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
 PREFIX geo: <http://www.opengis.net/ont/geosparql#>
-PREFIX osgeo: <http://data.ordnancesurvey.co.uk/ontology/geometry/>
-PREFIX places: <https://pleiades.stoa.org/places/>
-PREFIX pleiades: <https://pleiades.stoa.org/places/vocab#>
-PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+# Input: a JSON array of the records made by records.jq, passed in with
+#   -c location=<file>
 
 CONSTRUCT
 {
   ?place
-    a pleiades:Place ;
-    pleiades:hasFeatureType ?place_type ;
-    pleiades:hasRepresentativePoint ?repr_point_geojson ;
-    # pleiades:hasLocation ?location ;
-    dcterms:title ?place_title ;
-    dcterms:description ?place_description ;
+    a crm:E53_Place ;
+    rdfs:label ?place_title ;
+    crm:P2_has_type ?place_type ;
+    crm:P168_place_is_defined_by ?repr_point ;
+    crm:P1_is_identified_by ?appellation ;
+    crm:P67i_is_referred_to_by ?statement ;
+    crm:P89_falls_within ?rough_location ;
     .
 
-  ?place_type
-    a skos:Concept ;
-    skos:prefLabel ?place_type_label ;
+  ?appellation
+    a crm:E33_E41_Linguistic_Appellation ;
+    crm:P190_has_symbolic_content ?appellation_content ;
+    crm:P2_has_type ?name_type ;
     .
 
-  # ?location
-  #   a pleiades:Location ;
-  #   dcterms:title ?location_title ;
-  #   osgeo:asGeoJSON ?location_geojson ;
-  #   .
+  ?name_type a crm:E55_Type .
+
+  ?statement
+    a crm:E33_Linguistic_Object ;
+    crm:P190_has_symbolic_content ?statement_content ;
+    crm:P2_has_type aat:300435416 , ?statement_brief ;
+    .
+
+  ?location
+    a crm:E53_Place ;
+    rdfs:label ?location_title ;
+    crm:P2_has_type ?location_type ;
+    crm:P168_place_is_defined_by ?location_wkt ;
+    crm:P189_approximates ?approximated_place ;
+    .
+
+  ?location_type a crm:E55_Type .
 }
 WHERE
 {
-  SERVICE <x-sparql-anything:location=data/pleiades-places-latest.json>
+  SERVICE <x-sparql-anything:>
   {
-    fx:properties fx:json.literalize "geometry" .
+    ?root a fx:root ; fx:anySlot ?place_node .
+    ?place_node xyz:uri ?place_uri .
 
-    ?place_node
-      xyz:id ?place_id ;
-      xyz:uri ?place_uri_as_str ;
-      xyz:title ?place_title ;
-      xyz:description ?place_description ;
-      xyz:placeTypeURIs ?place_type_uris ;
-      .
-
-    ?place_type_uris fx:anySlot ?place_type_uri_as_str .
-
-    OPTIONAL
     {
-      ?place_node xyz:locations ?locations .
-      ?locations fx:anySlot ?location_node .
-      ?location_node
-        xyz:uri ?location_uri_as_str ;
-        xyz:title ?location_title ;
-        xyz:geometry ?geojson_as_str ;
+      ?place_node xyz:title ?place_title .
+    }
+    UNION
+    {
+      ?place_node xyz:placeTypeURIs/fx:anySlot ?place_type_uri .
+      BIND(IRI(?place_type_uri) AS ?place_type)
+    }
+    UNION
+    {
+      ?place_node xyz:reprPoint ?repr_point_str .
+      BIND(STRDT(?repr_point_str, geo:wktLiteral) AS ?repr_point)
+    }
+    UNION
+    {
+      ?place_node xyz:description ?statement_content .
+      BIND("description" AS ?statement_key)
+      BIND(aat:300418049 AS ?statement_brief)  # brief text
+    }
+    UNION
+    {
+      ?place_node xyz:details ?statement_content .
+      BIND("details" AS ?statement_key)
+    }
+    UNION
+    {
+      # Each name form is its own appellation.
+      ?place_node xyz:appellations/fx:anySlot ?appellation_node .
+      ?appellation_node
+        xyz:uri ?appellation_uri ;
+        xyz:content ?content ;
+        xyz:nameType ?name_type_slug ;
         .
-      BIND(IF(?geojson_as_str != "null",
-        STRDT(?geojson_as_str, geo:geoJSONLiteral),
-        ?unbound) AS ?location_geojson)
+      OPTIONAL { ?appellation_node xyz:language ?language }
+      BIND(IRI(?appellation_uri) AS ?appellation)
+      BIND(IF(BOUND(?language), STRLANG(?content, ?language), ?content)
+        AS ?appellation_content)
+      BIND(IRI(CONCAT("https://pleiades.stoa.org/vocabularies/name-types/",
+        ?name_type_slug)) AS ?name_type)
     }
-
-    OPTIONAL
+    UNION
     {
-      ?place_node xyz:reprPoint ?repr_point .
-      ?repr_point rdf:_1 ?repr_point_lng ; rdf:_2 ?repr_point_lat .
-      BIND(STRDT(CONCAT(
-        '{"type": "Point", "coordinates": [',
-        STR(?repr_point_lng),
-        ", ",
-        STR(?repr_point_lat),
-        "]}"), geo:geoJSONLiteral) AS ?repr_point_geojson)
+      # Each location is its own place.
+      ?place_node xyz:locations/fx:anySlot ?location_node .
+      ?location_node
+        xyz:uri ?location_uri ;
+        xyz:precision ?precision ;
+        .
+      OPTIONAL { ?location_node xyz:title ?location_title }
+      OPTIONAL
+      {
+        ?location_node xyz:wkt ?wkt .
+        BIND(STRDT(?wkt, geo:wktLiteral) AS ?location_wkt)
+      }
+      OPTIONAL
+      {
+        ?location_node xyz:locationTypes/fx:anySlot ?location_type_slug .
+        BIND(IRI(CONCAT("https://pleiades.stoa.org/vocabularies/location-types/",
+          ?location_type_slug)) AS ?location_type)
+      }
+      BIND(IRI(?location_uri) AS ?location)
     }
 
-    BIND(IRI(?place_uri_as_str) AS ?place)
-    BIND(IRI(?place_type_uri_as_str) as ?place_type)
-    BIND(IRI(?location_uri_as_str) as ?location)
-  }
-  SERVICE <x-sparql-anything:location=data/place-types.ttl>
-  {
-    ?place_type
-      a skos:Concept ;
-      skos:prefLabel ?place_type_label ;
-      .
+    # These BINDs come after the UNION so that they can see ?place_uri.
+    BIND(IRI(?place_uri) AS ?place)
+    BIND(IRI(CONCAT(?place_uri, "#", ?statement_key)) AS ?statement)
+    # A rough location marks an area that the ancient place falls within;
+    # any other location approximates the ancient place.
+    BIND(IF(?precision = "rough", ?location, ?unbound) AS ?rough_location)
+    BIND(IF(?precision != "rough", ?place, ?unbound) AS ?approximated_place)
   }
 }
