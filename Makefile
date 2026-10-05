@@ -24,7 +24,7 @@ endef
 all: pleiades-places.ttl pleiades-places.nt
 
 clean:
-	rm -f pleiades-places.ttl
+	rm -f pleiades-places.ttl pleiades-places.nt
 
 superclean: clean
 	rm -f data/pleiades-places-latest.json* data/place-types.ttl
@@ -38,11 +38,13 @@ $(SPARQL-ANY):
 	$(MAKE) -s -C tools/sparql-anything
 
 data/pleiades-places-latest.json:
+	mkdir -p data
 	curl $(PLEIADES)/json/pleiades-places-latest.json.gz > data/pleiades-places-latest.json.gz
 	gunzip -f data/pleiades-places-latest.json.gz
 	touch $@
 
 data/place-types.ttl:
+	mkdir -p data
 	curl $(PLEIADES)/rdf/place-types.ttl \
 	| sed 's|//pleiades.stoa.org/vocabularies/|//pleiades.stoa.org/vocabularies/place-types/|g' \
 	> $@
@@ -61,4 +63,4 @@ pleiades-places.ttl: \
 
 pleiades-places.nt: pleiades-places.ttl
 	$(RIOT) --quiet --output=ntriples $< \
-	2> >(rg -v 'WARN  riot' 1>&2) > $@ || true
+	2> >(grep -v 'WARN  riot' 1>&2) > $@ || true
