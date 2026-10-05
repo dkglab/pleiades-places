@@ -8,7 +8,7 @@ X := $(foreach tool,$(TOOLS),\
 	$(error Please install $(tool) and ensure it is in your path)))
 
 JENA_HOST := https://archive.apache.org/dist/jena/binaries
-JENA_VERSION := 5.5.0
+JENA_VERSION := 6.2.0
 
 .PHONY: all clean
 

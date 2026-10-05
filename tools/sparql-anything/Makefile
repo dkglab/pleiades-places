@@ -1,7 +1,7 @@
 SHELL := /usr/bin/env bash
 .SHELLFLAGS := -O extglob -c
 SA_HOST := https://github.com/SPARQL-Anything/sparql.anything/releases/download
-SA_VERSION := v1.0.0
+SA_VERSION := v1.2.0
 
 .PHONY: all clean
 
