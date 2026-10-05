@@ -14,7 +14,7 @@ CONSTRUCT
     a pleiades:Place ;
     pleiades:hasFeatureType ?place_type ;
     pleiades:hasRepresentativePoint ?repr_point_geojson ;
-    pleiades:hasLocation ?location ;
+    # pleiades:hasLocation ?location ;
     dcterms:title ?place_title ;
     dcterms:description ?place_description ;
     .
@@ -24,11 +24,11 @@ CONSTRUCT
     skos:prefLabel ?place_type_label ;
     .
 
-  ?location
-    a pleiades:Location ;
-    dcterms:title ?location_title ;
-    osgeo:asGeoJSON ?location_geojson ;
-    .
+  # ?location
+  #   a pleiades:Location ;
+  #   dcterms:title ?location_title ;
+  #   osgeo:asGeoJSON ?location_geojson ;
+  #   .
 }
 WHERE
 {
@@ -42,18 +42,23 @@ WHERE
       xyz:title ?place_title ;
       xyz:description ?place_description ;
       xyz:placeTypeURIs ?place_type_uris ;
-      xyz:locations ?locations ;
       .
 
     ?place_type_uris fx:anySlot ?place_type_uri_as_str .
-    ?locations fx:anySlot ?location_node .
 
-    ?location_node
-      xyz:uri ?location_uri_as_str ;
-      xyz:title ?location_title ;
-      xyz:geometry ?geojson_as_str ;
-      .
-    BIND(IF(?geojson_as_str != "null", STRDT(?geojson_as_str, geo:geoJSONLiteral), ?unbound) AS ?location_geojson)
+    OPTIONAL
+    {
+      ?place_node xyz:locations ?locations .
+      ?locations fx:anySlot ?location_node .
+      ?location_node
+        xyz:uri ?location_uri_as_str ;
+        xyz:title ?location_title ;
+        xyz:geometry ?geojson_as_str ;
+        .
+      BIND(IF(?geojson_as_str != "null",
+        STRDT(?geojson_as_str, geo:geoJSONLiteral),
+        ?unbound) AS ?location_geojson)
+    }
 
     OPTIONAL
     {
