@@ -1,5 +1,6 @@
 SHELL := /usr/bin/env bash
-.SHELLFLAGS := -O extglob -c
+.SHELLFLAGS := -O extglob -o pipefail -c
+.DELETE_ON_ERROR:
 
 TOOLS := curl tar
 
@@ -18,5 +19,5 @@ clean:
 	rm -rf !(Makefile)
 
 bin/riot:
-	curl -L $(JENA_HOST)/apache-jena-$(JENA_VERSION).tar.gz \
+	curl -fsSL $(JENA_HOST)/apache-jena-$(JENA_VERSION).tar.gz \
 	| tar -zxf - --strip-components 1

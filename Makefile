@@ -1,5 +1,6 @@
 SHELL := /usr/bin/env bash
-.SHELLFLAGS := -O extglob -c
+.SHELLFLAGS := -O extglob -o pipefail -c
+.DELETE_ON_ERROR:
 
 SPARQL-ANY := ./tools/sparql-anything/sparql-anything.jar
 RIOT := ./tools/jena/bin/riot
@@ -42,13 +43,13 @@ $(SPARQL-ANY):
 
 data/pleiades-places-latest.json:
 	mkdir -p data
-	curl $(PLEIADES)/json/pleiades-places-latest.json.gz > data/pleiades-places-latest.json.gz
+	curl -fsSL $(PLEIADES)/json/pleiades-places-latest.json.gz > data/pleiades-places-latest.json.gz
 	gunzip -f data/pleiades-places-latest.json.gz
 	touch $@
 
 data/place-types.ttl:
 	mkdir -p data
-	curl $(PLEIADES)/rdf/place-types.ttl \
+	curl -fsSL $(PLEIADES)/rdf/place-types.ttl \
 	| sed 's|//pleiades.stoa.org/vocabularies/|//pleiades.stoa.org/vocabularies/place-types/|g' \
 	> $@
 

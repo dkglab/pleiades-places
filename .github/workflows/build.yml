@@ -1,0 +1,40 @@
+name: Build
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      # SPARQL Anything and Jena 6 need Java 21 or later.
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Cache Jena and SPARQL Anything
+        uses: actions/cache@v6
+        with:
+          path: |
+            tools/jena
+            tools/sparql-anything/sparql-anything.jar
+          key: tools-${{ hashFiles('tools/*/Makefile') }}
+
+      # Downloads the latest Pleiades JSON dump, so the output follows the data.
+      - name: Build pleiades-places.nt
+        run: make
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: pleiades-places
+          path: pleiades-places.nt
+          retention-days: 7
