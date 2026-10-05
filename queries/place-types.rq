@@ -1,0 +1,15 @@
+PREFIX crm: <http://www.cidoc-crm.org/cidoc-crm/>
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+CONSTRUCT
+{
+  ?place_type a crm:E55_Type ; rdfs:label ?label .
+}
+WHERE
+{
+  SERVICE <x-sparql-anything:location=data/place-types.ttl>
+  {
+    ?place_type a skos:Concept ; skos:prefLabel ?label .
+  }
+}

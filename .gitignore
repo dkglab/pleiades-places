@@ -1,8 +1,9 @@
 .DS_Store
-/pleiades-places.ttl
 /pleiades-places.nt
 /data/pleiades-places-latest.json
 /data/place-types.ttl
+/data/places.jsonl
+/data/chunks/
 /tools/jena/*
 !/tools/jena/Makefile
 /tools/sparql-anything/*

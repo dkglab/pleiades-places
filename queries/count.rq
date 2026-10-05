@@ -1,4 +1,0 @@
-PREFIX pleiades: <https://pleiades.stoa.org/places/vocab#>
-
-SELECT (COUNT(?place) AS ?count)
-WHERE { ?place a pleiades:Place }
