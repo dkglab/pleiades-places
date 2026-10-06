@@ -1,0 +1,50 @@
+PREFIX aat:            <http://vocab.getty.edu/aat/>
+PREFIX crm:            <http://www.cidoc-crm.org/cidoc-crm/>
+PREFIX geo:            <http://www.opengis.net/ont/geosparql#>
+PREFIX location-types: <https://pleiades.stoa.org/vocabularies/location-types/>
+PREFIX name-types:     <https://pleiades.stoa.org/vocabularies/name-types/>
+PREFIX place-types:    <https://pleiades.stoa.org/vocabularies/place-types/>
+PREFIX rdfs:           <http://www.w3.org/2000/01/rdf-schema#>
+
+place-types:settlement
+        a           crm:E55_Type;
+        rdfs:label  "settlement"@en .
+
+name-types:geographic
+        a       crm:E55_Type .
+
+location-types:representative
+        a       crm:E55_Type .
+
+<https://pleiades.stoa.org/places/270296>
+        a                           crm:E53_Place;
+        rdfs:label                  "Althaia/Cartala";
+        crm:P1_is_identified_by     <https://pleiades.stoa.org/places/270296/cartala#romanized-1> , <https://pleiades.stoa.org/places/270296/althaia#romanized-1>;
+        crm:P2_has_type             place-types:settlement;
+        crm:P67i_is_referred_to_by  <https://pleiades.stoa.org/places/270296#details> , <https://pleiades.stoa.org/places/270296#description> .
+
+<https://pleiades.stoa.org/places/270296/cartala#romanized-1>
+        a                              crm:E33_E41_Linguistic_Appellation;
+        crm:P190_has_symbolic_content  "Cartala";
+        crm:P2_has_type                name-types:geographic .
+
+<https://pleiades.stoa.org/places/270296/batlas-location>
+        a                      crm:E53_Place;
+        rdfs:label             "Barrington Atlas location";
+        crm:P189_approximates  <https://pleiades.stoa.org/places/270296>;
+        crm:P2_has_type        location-types:representative .
+
+<https://pleiades.stoa.org/places/270296/althaia#romanized-1>
+        a                              crm:E33_E41_Linguistic_Appellation;
+        crm:P190_has_symbolic_content  "Althaia";
+        crm:P2_has_type                name-types:geographic .
+
+<https://pleiades.stoa.org/places/270296#details>
+        a                              crm:E33_Linguistic_Object;
+        crm:P190_has_symbolic_content  "The Barrington Atlas Directory notes: city of Olcades";
+        crm:P2_has_type                aat:300435416 .
+
+<https://pleiades.stoa.org/places/270296#description>
+        a                              crm:E33_Linguistic_Object;
+        crm:P190_has_symbolic_content  "An ancient settlement, attested by literary or documentary sources, whose precise location cannot be determined today";
+        crm:P2_has_type                aat:300435416 , aat:300418049 .

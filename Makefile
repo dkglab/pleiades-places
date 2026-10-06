@@ -9,9 +9,28 @@ RIOT := ./tools/jena/bin/riot
 JAVA := java -Xmx4g
 CHUNK_SIZE := 2000
 
-.PHONY: all clean superclean
+.PHONY: all clean superclean examples
 
 PLEIADES := https://atlantides.org/downloads/pleiades
+
+# Example places, chosen to show a range of modelling choices
+# (see examples/README.md).
+EXAMPLES := phaleron epidion-akron ichthyophagoi althaia-cartala
+examples/phaleron.ttl: PLACE := 580072
+examples/epidion-akron.ttl: PLACE := 89178
+examples/ichthyophagoi.ttl: PLACE := 29605
+examples/althaia-cartala.ttl: PLACE := 270296
+
+define PREFIXES
+@prefix aat: <http://vocab.getty.edu/aat/> .
+@prefix crm: <http://www.cidoc-crm.org/cidoc-crm/> .
+@prefix geo: <http://www.opengis.net/ont/geosparql#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix location-types: <https://pleiades.stoa.org/vocabularies/location-types/> .
+@prefix name-types: <https://pleiades.stoa.org/vocabularies/name-types/> .
+@prefix place-types: <https://pleiades.stoa.org/vocabularies/place-types/> .
+endef
+export PREFIXES
 
 define green
 \033[0;32m$(1)\033[0m
@@ -34,6 +53,18 @@ superclean: clean
 	rm -f data/pleiades-places-latest.json* data/place-types.ttl
 	$(MAKE) -s -C tools/sparql-anything clean
 	$(MAKE) -s -C tools/jena clean
+
+examples: $(EXAMPLES:%=examples/%.ttl)
+
+# Everything said about a place, its names, statements and locations, plus
+# the vocabulary terms they use.
+examples/%.ttl: pleiades-places.nt | $(RIOT)
+	mkdir -p examples
+	grep -E '^<https://pleiades\.stoa\.org/places/$(PLACE)[>/#]' $< > $@.nt
+	grep -oE '<https://pleiades\.stoa\.org/vocabularies/[^>]+>' $@.nt \
+	| sort -u | awk 'NR == FNR { terms[$$0] ; next } $$1 in terms' - $< >> $@.nt
+	{ echo "$$PREFIXES" ; cat $@.nt ; } | $(RIOT) --syntax=ttl --formatted=ttl - > $@
+	rm $@.nt
 
 $(RIOT):
 	@$(MAKE) -s -C tools/jena

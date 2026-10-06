@@ -6,6 +6,7 @@ Builds `pleiades-places.nt`, an N-Triples version of the [Pleiades](https://plei
 
 ```sh
 make            # build pleiades-places.nt
+make examples   # regenerate the example places in examples/
 make clean      # remove the output and intermediate files
 make superclean # also remove downloaded data and tools
 ```
@@ -35,7 +36,7 @@ Chunking and the 4 GB Java heap cap (`-Xmx4g`) keep a full build within 8 GB of 
 | description, details | `crm:E33_Linguistic_Object`, linked with `crm:P67i_is_referred_to_by` |
 | location | its own `crm:E53_Place` with a WKT geometry (`geo:wktLiteral`). The ancient place `crm:P89_falls_within` a rough location; any other location `crm:P189_approximates` the ancient place. |
 
-Pleiades URIs are used as-is for places, locations, names and vocabulary terms. Open modelling questions are tracked in the [issues](https://github.com/dkglab/pleiades-places/issues).
+Pleiades URIs are used as-is for places, locations, names and vocabulary terms. See [`examples/`](examples/) for four places in Turtle. Open modelling questions are tracked in the [issues](https://github.com/dkglab/pleiades-places/issues).
 
 ## CI
 
