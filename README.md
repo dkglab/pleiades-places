@@ -12,7 +12,7 @@ make clean      # remove the output and intermediate files
 make superclean # also remove downloaded data and tools
 ```
 
-Requirements: GNU make, bash, curl, jq (1.7 or later), GNU coreutils and Java 21 or later. The diagrams also need Python 3 and [Graphviz](https://graphviz.org/). The Makefile downloads [Apache Jena](https://jena.apache.org/) and [SPARQL Anything](https://sparql-anything.cc/) into `tools/`, and installs [RDFLib](https://rdflib.readthedocs.io/) (for `rdf2dot`) in a virtual environment there.
+Requirements: GNU make, bash, curl, jq (1.7 or later), GNU coreutils and Java 21 or later. The diagrams also need Python 3 and [Graphviz](https://graphviz.org/). The Makefile downloads [Apache Jena](https://jena.apache.org/) and [SPARQL Anything](https://sparql-anything.cc/) into `tools/`, and installs [RDFLib](https://rdflib.readthedocs.io/) in a virtual environment there for [`scripts/diagram.py`](scripts/diagram.py), which draws the diagrams with `rdf2dot`.
 
 ## How the build works
 

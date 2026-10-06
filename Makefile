@@ -5,6 +5,7 @@ SHELL := /usr/bin/env bash
 SPARQL-ANY := ./tools/sparql-anything/sparql-anything.jar
 RIOT := ./tools/jena/bin/riot
 RDF2DOT := ./tools/rdflib/bin/rdf2dot
+PYTHON := ./tools/rdflib/bin/python
 # Keep the heap well below the sprite's 8 GB so that running out of memory
 # is a Java OutOfMemoryError rather than a crashed machine.
 JAVA := java -Xmx4g
@@ -70,10 +71,11 @@ examples/%.ttl: pleiades-places.nt | $(RIOT)
 	{ echo "$$PREFIXES" ; cat $@.nt ; } | $(RIOT) --syntax=ttl --formatted=ttl - > $@
 	rm $@.nt
 
-# SVG, so that GitHub shows the diagrams sharply at any zoom. A fixed hash
-# seed keeps rdf2dot's node order, and so the SVG, stable between runs.
-examples/%.svg: examples/%.ttl | $(RDF2DOT)
-	PYTHONHASHSEED=0 $(RDF2DOT) -f turtle $< 2> /dev/null | dot -Tsvg > $@
+# SVG, so that GitHub shows the diagrams sharply at any zoom. Left to right,
+# because a place has many direct neighbours. A fixed hash seed keeps
+# rdf2dot's node order, and so the SVG, stable between runs.
+examples/%.svg: scripts/diagram.py examples/%.ttl | $(RDF2DOT)
+	PYTHONHASHSEED=0 $(PYTHON) $^ | dot -Grankdir=LR -Tsvg > $@
 
 $(RIOT):
 	@$(MAKE) -s -C tools/jena
