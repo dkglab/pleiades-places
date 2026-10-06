@@ -6,12 +6,13 @@ Builds `pleiades-places.nt`, an N-Triples version of the [Pleiades](https://plei
 
 ```sh
 make            # build pleiades-places.nt
-make examples   # regenerate the example places in examples/
+make examples   # regenerate the example places in examples/ and their diagrams
+make diagrams   # regenerate only the diagrams of the examples
 make clean      # remove the output and intermediate files
 make superclean # also remove downloaded data and tools
 ```
 
-Requirements: GNU make, bash, curl, jq (1.7 or later), GNU coreutils and Java 21 or later. The Makefile downloads [Apache Jena](https://jena.apache.org/) and [SPARQL Anything](https://sparql-anything.cc/) into `tools/`.
+Requirements: GNU make, bash, curl, jq (1.7 or later), GNU coreutils and Java 21 or later. The diagrams also need Python 3 and [Graphviz](https://graphviz.org/). The Makefile downloads [Apache Jena](https://jena.apache.org/) and [SPARQL Anything](https://sparql-anything.cc/) into `tools/`, and installs [RDFLib](https://rdflib.readthedocs.io/) (for `rdf2dot`) in a virtual environment there.
 
 ## How the build works
 
