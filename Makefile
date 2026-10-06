@@ -4,12 +4,13 @@ SHELL := /usr/bin/env bash
 
 SPARQL-ANY := ./tools/sparql-anything/sparql-anything.jar
 RIOT := ./tools/jena/bin/riot
+RDF2DOT := ./tools/rdflib/bin/rdf2dot
 # Keep the heap well below the sprite's 8 GB so that running out of memory
 # is a Java OutOfMemoryError rather than a crashed machine.
 JAVA := java -Xmx4g
 CHUNK_SIZE := 2000
 
-.PHONY: all clean superclean examples
+.PHONY: all clean superclean examples diagrams
 
 PLEIADES := https://atlantides.org/downloads/pleiades
 
@@ -53,8 +54,11 @@ superclean: clean
 	rm -f data/pleiades-places-latest.json* data/place-types.ttl
 	$(MAKE) -s -C tools/sparql-anything clean
 	$(MAKE) -s -C tools/jena clean
+	$(MAKE) -s -C tools/rdflib clean
 
-examples: $(EXAMPLES:%=examples/%.ttl)
+examples: $(EXAMPLES:%=examples/%.ttl) diagrams
+
+diagrams: $(EXAMPLES:%=examples/%.svg)
 
 # Everything said about a place, its names, statements and locations, plus
 # the vocabulary terms they use.
@@ -66,8 +70,16 @@ examples/%.ttl: pleiades-places.nt | $(RIOT)
 	{ echo "$$PREFIXES" ; cat $@.nt ; } | $(RIOT) --syntax=ttl --formatted=ttl - > $@
 	rm $@.nt
 
+# SVG, so that GitHub shows the diagrams sharply at any zoom. A fixed hash
+# seed keeps rdf2dot's node order, and so the SVG, stable between runs.
+examples/%.svg: examples/%.ttl | $(RDF2DOT)
+	PYTHONHASHSEED=0 $(RDF2DOT) -f turtle $< 2> /dev/null | dot -Tsvg > $@
+
 $(RIOT):
 	@$(MAKE) -s -C tools/jena
+
+$(RDF2DOT):
+	$(MAKE) -s -C tools/rdflib
 
 $(SPARQL-ANY):
 	$(MAKE) -s -C tools/sparql-anything
